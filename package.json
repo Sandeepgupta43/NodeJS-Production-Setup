@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "node test.js",
-    "start": "node index.js",
+    "start": "node dist/index.js",
+    "dev":"tsc-watch --onSuccess \"npm start\"",
+    "build":"tsc",
     "prepare": "husky"
   },
   "keywords": [],
@@ -13,9 +14,12 @@
   "description": "",
   "devDependencies": {
     "husky": "^9.1.7",
-    "lint-staged": "^16.1.2"
+    "lint-staged": "^16.1.2",
+    "typescript": "^5.8.3"
   },
   "dependencies": {
-    "gitignore": "^0.7.0"
+    "@types/node": "^24.1.0",
+    "gitignore": "^0.7.0",
+    "tsc-watch": "^7.1.1"
   }
 }
