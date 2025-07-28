@@ -8,6 +8,8 @@
     "build": "tsc",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "format:check":"prettier . --check",
+    "format:fix":"prettier . --fix",
     "prepare": "husky"
   },
   "keywords": [],
@@ -15,7 +17,8 @@
   "license": "ISC",
   "lint-staged": {
     "*ts": [
-      "npm run lint:fix"
+      "npm run lint:fix",
+      "npm run format:fix"
     ]
   },
   "description": "",
@@ -24,8 +27,10 @@
     "@commitlint/config-conventional": "^19.8.1",
     "@eslint/js": "^9.32.0",
     "eslint": "^9.32.0",
+    "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
     "lint-staged": "^16.1.2",
+    "prettier": "3.6.2",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.38.0"
   },
