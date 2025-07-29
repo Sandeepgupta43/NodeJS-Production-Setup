@@ -1,42 +1,69 @@
 {
-  "name": "production-nodejs-setup",
-  "version": "1.0.0",
-  "main": "server.js",
-  "scripts": {
-    "start": "node dist/server.js",
-    "dev": "tsc-watch --onSuccess \"npm start\"",
-    "build": "tsc",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "format:check":"prettier . --check",
-    "format:fix":"prettier . --fix",
-    "prepare": "husky"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "lint-staged": {
-    "*ts": [
-      "npm run lint:fix",
-      "npm run format:fix"
-    ]
-  },
-  "description": "",
-  "devDependencies": {
-    "@commitlint/cli": "^19.8.1",
-    "@commitlint/config-conventional": "^19.8.1",
-    "@eslint/js": "^9.32.0",
-    "eslint": "^9.32.0",
-    "eslint-config-prettier": "^10.1.8",
-    "husky": "^9.1.7",
-    "lint-staged": "^16.1.2",
-    "prettier": "3.6.2",
-    "typescript": "^5.8.3",
-    "typescript-eslint": "^8.38.0"
-  },
-  "dependencies": {
-    "@types/node": "^24.1.0",
-    "gitignore": "^0.7.0",
-    "tsc-watch": "^7.1.1"
-  }
+    "name": "production-nodejs-setup",
+    "version": "1.0.0",
+    "main": "server.js",
+    "scripts": {
+        "dist": "npx tsc",
+        "dev": "cross-env NODE_ENV=development nodemon --legacy-watch ./src/server.ts",
+        "start": "cross-env NODE_ENV=production node dist/server.js",
+        "build": "tsc",
+        "lint": "eslint . --ext .ts,.tsx",
+        "lint:fix": "eslint . --ext .ts,.tsx --fix",
+        "format:check": "prettier . --check",
+        "format:fix": "prettier . --fix",
+        "prepare": "husky",
+        "prisma:generate:dev": "cross-env DOTENV_CONFIG_PATH=.env.development dotenv -e .env.development -- prisma generate",
+        "prisma:generate:prod": "cp .env.production .env && npx prisma generate",
+        "prisma:migrate:dev": "cp .env.development .env && npx prisma migrate dev",
+        "prisma:migrate:prod": "cp .env.production .env && npx prisma migrate deploy"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "lint-staged": {
+        "*ts": [
+            "npm run lint:fix",
+            "npm run format:fix"
+        ]
+    },
+    "description": "",
+    "devDependencies": {
+        "@commitlint/cli": "^19.8.1",
+        "@commitlint/config-conventional": "^19.8.1",
+        "@eslint/js": "^9.32.0",
+        "@types/cors": "^2.8.19",
+        "@types/express": "^5.0.3",
+        "@types/node": "^24.1.0",
+        "@types/source-map-support": "^0.5.10",
+        "@typescript-eslint/eslint-plugin": "^8.38.0",
+        "@typescript-eslint/parser": "^8.38.0",
+        "eslint": "^9.32.0",
+        "eslint-config-prettier": "^10.1.8",
+        "eslint-plugin-import": "^2.32.0",
+        "husky": "^9.1.7",
+        "lint-staged": "^16.1.2",
+        "prettier": "^3.6.2",
+        "prisma": "^6.13.0",
+        "ts-node": "^10.9.2",
+        "tsx": "^4.20.3",
+        "typescript": "^5.8.3"
+    },
+    "dependencies": {
+        "@icolussi/winston-mysql": "^1.1.4",
+        "@prisma/client": "^6.13.0",
+        "colorette": "^2.0.20",
+        "cors": "^2.8.5",
+        "cross-env": "^10.0.0",
+        "dotenv-flow": "^4.1.0",
+        "express": "^5.1.0",
+        "gitignore": "^0.7.0",
+        "helmet": "^8.1.0",
+        "nodemon": "^3.1.10",
+        "npm-check-updates": "^18.0.2",
+        "rate-limiter-flexible": "^7.2.0",
+        "source-map-support": "^0.5.21",
+        "tsc-watch": "^7.1.1",
+        "winston": "^3.17.0",
+        "winston-mysql-transport": "^0.1.2"
+    }
 }

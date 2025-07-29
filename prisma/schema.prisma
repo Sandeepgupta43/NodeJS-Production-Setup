@@ -1,0 +1,314 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id              BigInt           @id @default(autoincrement())
+  // tenant_id       BigInt
+  name            String?
+  email           String?          @unique
+  phone           String?          @unique
+  password_hash   String?
+  status          UserStatus?
+  created_at      DateTime?
+  updated_at      DateTime?
+  roles           UserRole[]
+  bankEmployee    BankEmployee?
+  lawFirmEmployee LawFirmEmployee?
+  client          Client?
+  loanManager     Case[]           @relation("loan_manager_cases")
+  lawyer          Case[]           @relation("lawyer_cases")
+  uploadedDocs    Document[]       @relation("document_uploader")
+  verifiedDocs    Document[]       @relation("document_verifier")
+  // tenant          Tenant           @relation(fields: [tenant_id], references: [id])
+  caseTimeline    CaseTimeline[]
+  notifications   Notification[]
+  auditLogs       AuditLog[]
+  tokens          Token[]
+}
+
+enum UserStatus {
+  active
+  inactive
+}
+
+model Role {
+  id          BigInt           @id @default(autoincrement())
+  name        String           @unique
+  description String?
+  users       UserRole[]
+  permissions RolePermission[]
+}
+
+model UserRole {
+  user_id     BigInt
+  role_id     BigInt
+  assigned_at DateTime?
+  user        User      @relation(fields: [user_id], references: [id])
+  role        Role      @relation(fields: [role_id], references: [id])
+
+  @@id([user_id, role_id])
+}
+
+model Permission {
+  id          BigInt           @id @default(autoincrement())
+  name        String           @unique
+  description String?
+  roles       RolePermission[]
+}
+
+model RolePermission {
+  role_id       BigInt
+  permission_id BigInt
+  role          Role       @relation(fields: [role_id], references: [id])
+  permission    Permission @relation(fields: [permission_id], references: [id])
+
+  @@id([role_id, permission_id])
+}
+
+model Bank {
+  id         BigInt    @id @default(autoincrement())
+  // tenant_id  BigInt
+  name       String?
+  address    String?
+  created_at DateTime?
+  // tenant     Tenant    @relation(fields: [tenant_id], references: [id])
+  branches   Branch[]
+}
+
+model Branch {
+  id         BigInt                @id @default(autoincrement())
+  bank_id    BigInt
+  name       String?
+  location   Unsupported("POINT")?
+  address    String?
+  created_at DateTime?
+  bank       Bank                  @relation(fields: [bank_id], references: [id])
+  employees  BankEmployee[]
+  clients    Client[]
+  cases      Case[]
+}
+
+model LawFirm {
+  id         BigInt                @id @default(autoincrement())
+  // tenant_id  BigInt
+  name       String?
+  location   Unsupported("POINT")?
+  address    String?
+  created_at DateTime?
+  // tenant     Tenant                @relation(fields: [tenant_id], references: [id])
+  employees  LawFirmEmployee[]
+  cases      Case[]
+  payments   Payment[]
+}
+
+model BankEmployee {
+  id        BigInt    @id @default(autoincrement())
+  user_id   BigInt    @unique
+  branch_id BigInt
+  joined_at DateTime?
+  user      User      @relation(fields: [user_id], references: [id])
+  branch    Branch    @relation(fields: [branch_id], references: [id])
+}
+
+model LawFirmEmployee {
+  id          BigInt    @id @default(autoincrement())
+  user_id     BigInt    @unique
+  law_firm_id BigInt
+  joined_at   DateTime?
+  user        User      @relation(fields: [user_id], references: [id])
+  lawFirm     LawFirm   @relation(fields: [law_firm_id], references: [id])
+}
+
+model Client {
+  id          BigInt    @id @default(autoincrement())
+  user_id     BigInt    @unique
+  branch_id   BigInt
+  aadhaar     String?
+  pan         String?
+  verified_at DateTime?
+  user        User      @relation(fields: [user_id], references: [id])
+  branch      Branch    @relation(fields: [branch_id], references: [id])
+  cases       Case[]
+}
+
+model Case {
+  id              BigInt                @id @default(autoincrement())
+  case_uid        String                @unique
+  client_id       BigInt
+  loan_manager_id BigInt
+  branch_id       BigInt
+  law_firm_id     BigInt?
+  lawyer_id       BigInt?
+  // tenant_id       BigInt
+  loan_type       LoanType
+  loan_amount     Float?
+  status          CaseStatus
+  client_location Unsupported("POINT")?
+  created_at      DateTime?
+  updated_at      DateTime?
+  client          Client                @relation(fields: [client_id], references: [id])
+  loanManager     User                  @relation(fields: [loan_manager_id], references: [id], name: "loan_manager_cases")
+  branch          Branch                @relation(fields: [branch_id], references: [id])
+  lawFirm         LawFirm?              @relation(fields: [law_firm_id], references: [id])
+  lawyer          User?                 @relation(fields: [lawyer_id], references: [id], name: "lawyer_cases")
+  // tenant          Tenant                @relation(fields: [tenant_id], references: [id])
+  documents       Document[]
+  timeline        CaseTimeline[]
+  payments        Payment[]
+  auditLogs       AuditLog[]
+}
+
+enum LoanType {
+  Home
+  Business
+  Personal
+}
+
+enum CaseStatus {
+  new
+  in_progress
+  awaiting_docs
+  rejected
+  completed
+}
+
+model Document {
+  id               BigInt         @id @default(autoincrement())
+  case_id          BigInt
+  uploaded_by      BigInt
+  doc_type         DocumentType
+  file_path        String?
+  status           DocumentStatus
+  verified_by      BigInt?
+  rejection_reason String?
+  uploaded_at      DateTime?
+  verified_at      DateTime?
+  case             Case           @relation(fields: [case_id], references: [id])
+  uploadedBy       User           @relation(fields: [uploaded_by], references: [id], name: "document_uploader")
+  verifiedBy       User?          @relation(fields: [verified_by], references: [id], name: "document_verifier")
+}
+
+enum DocumentType {
+  Aadhaar
+  PAN
+  BankStatement
+  IncomeProof
+}
+
+enum DocumentStatus {
+  pending
+  verified
+  rejected
+}
+
+model CaseTimeline {
+  id         BigInt    @id @default(autoincrement())
+  case_id    BigInt
+  actor_id   BigInt
+  action     String?
+  details    String?
+  created_at DateTime?
+  case       Case      @relation(fields: [case_id], references: [id])
+  actor      User      @relation(fields: [actor_id], references: [id])
+}
+
+model Payment {
+  id             BigInt        @id @default(autoincrement())
+  case_id        BigInt
+  law_firm_id    BigInt
+  invoice_number String?
+  amount         Float?
+  status         PaymentStatus
+  created_at     DateTime?
+  paid_at        DateTime?
+  case           Case          @relation(fields: [case_id], references: [id])
+  lawFirm        LawFirm       @relation(fields: [law_firm_id], references: [id])
+}
+
+enum PaymentStatus {
+  pending
+  paid
+}
+
+model Notification {
+  id         BigInt             @id @default(autoincrement())
+  user_id    BigInt
+  type       String?
+  message    String?
+  status     NotificationStatus
+  created_at DateTime?
+  user       User               @relation(fields: [user_id], references: [id])
+}
+
+enum NotificationStatus {
+  sent
+  read
+}
+
+model AuditLog {
+  id         BigInt    @id @default(autoincrement())
+  user_id    BigInt
+  action     String?
+  entity     String?
+  entity_id  BigInt?
+  case_id    BigInt?
+  old_value  Json?
+  new_value  Json?
+  created_at DateTime?
+  user       User      @relation(fields: [user_id], references: [id])
+  case       Case?     @relation(fields: [case_id], references: [id])
+}
+
+model Token {
+  id         BigInt    @id @default(autoincrement())
+  user_id    BigInt
+  token      String    @unique
+  type       TokenType
+  expires_at DateTime
+  created_at DateTime  @default(now())
+
+  user User @relation(fields: [user_id], references: [id])
+}
+
+enum TokenType {
+  password_reset
+  email_verification
+  session
+}
+
+// model Tenant {
+//   id         BigInt     @id @default(autoincrement())
+//   name       String
+//   type       TenantType
+//   created_at DateTime   @default(now())
+//   users      User[]
+//   cases      Case[]
+//   banks      Bank[]
+//   lawFirms   LawFirm[]
+// }
+
+// enum TenantType {
+//   bank
+//   law_firm
+// }
+
+model Log {
+  id            Int      @id @default(autoincrement())
+  level         String?  @db.VarChar(255)
+  message       String?
+  timestamp     DateTime @default(now())
+  meta          Json?
+  method        String?  @db.VarChar(255)
+  endpoint      String?  @db.VarChar(255)
+  req           String?
+  res           String?
+  responsecode  String?  @db.VarChar(10)
+  responsetime  Int?
+}
+
